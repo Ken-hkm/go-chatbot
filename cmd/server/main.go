@@ -36,7 +36,7 @@ func main() {
 		jwtSecret = "your-default-jwt-secret"
 	}
 	// Set up services
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, jwtSecret)
 
 	// Set up controllers
 	userController := controller.NewUserController(userService)

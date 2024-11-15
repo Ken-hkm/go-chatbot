@@ -7,7 +7,8 @@ import (
 )
 
 func RegisterRoutes(e *echo.Echo, userHandler *handler.UserHandler) {
-	e.POST("/login", userHandler.Login)
-	e.POST("/register", userHandler.RegisterUser)
+	apiGroupUser := e.Group("/api/v1/user")
 
+	apiGroupUser.POST("/login", userHandler.Login)
+	apiGroupUser.POST("/register", userHandler.RegisterUser)
 }
