@@ -8,6 +8,7 @@ import (
 
 type UserController interface {
 	RegisterUser(user *models.User) error
+	Login(username, password string) (string, error)
 }
 
 type userController struct {
@@ -20,4 +21,7 @@ func NewUserController(userService service.UserService) UserController {
 
 func (uc *userController) RegisterUser(user *models.User) error {
 	return uc.userService.RegisterUser(user)
+}
+func (uc *userController) Login(username, password string) (string, error) {
+	return uc.userService.Login(username, password)
 }

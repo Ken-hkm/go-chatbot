@@ -30,6 +30,11 @@ func main() {
 	// Set up repositories
 	userRepo := repository.NewUserRepository(database)
 
+	// Initialize the JWT secret from environment variables or a default value
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "your-default-jwt-secret"
+	}
 	// Set up services
 	userService := service.NewUserService(userRepo)
 
@@ -47,22 +52,22 @@ func main() {
 	e.Use(middleware.Recover())
 	//e.Use(internalMiddleware.AuthMiddleware) // Custom middleware
 
-	// Routes
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, Echo!")
-	})
 	// Set up request validation
 	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Register routes
 	api.RegisterRoutes(e, userHandler)
+	e.GET("/healthcheck", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, Echo!")
+	})
+
 	// Start server
 	// Get the host and port from environment variables, default to "0.0.0.0:8080" if not set
 	host := os.Getenv("SERVER_ADDRESS")
 	if host == "" {
 		host = "0.0.0.0" // Default to all interfaces if not set
 	}
-	port := os.Getenv("PORT")
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
 		port = "8080" // Default to port 8080 if not set
 	}

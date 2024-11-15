@@ -3,22 +3,26 @@ package service
 
 import (
 	"errors"
+	"github.com/golang-jwt/jwt"
 	"go-chatbot/internal/db/models"
 	"go-chatbot/internal/repository"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type UserService interface {
 	RegisterUser(user *models.User) error
 	GetUserByID(id uint) (*models.User, error)
+	Login(username, password string) (string, error)
 }
 
 type userService struct {
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
+	jwtSecret string
 }
 
-func NewUserService(userRepo repository.UserRepository) UserService {
-	return &userService{userRepo: userRepo}
+func NewUserService(userRepo repository.UserRepository, jwtSecret string) UserService {
+	return &userService{userRepo: userRepo, jwtSecret: jwtSecret}
 }
 
 func (s *userService) RegisterUser(user *models.User) error {
@@ -43,4 +47,26 @@ func (s *userService) GetUserByID(id uint) (*models.User, error) {
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
+}
+
+func (s *userService) Login(username, password string) (string, error) {
+	// Check if user exists and password matches
+	user, err := s.userRepo.GetUserByUsername(username)
+	if err != nil || user == nil || user.Password != password {
+		return "", errors.New("invalid credentials")
+	}
+
+	// Create a JWT token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(), // Token expires in 72 hours
+	})
+
+	// Sign and get the complete encoded token as a string
+	tokenString, err := token.SignedString([]byte(s.jwtSecret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
