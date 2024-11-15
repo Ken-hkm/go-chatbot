@@ -49,7 +49,7 @@ func (m *Manager) Start() {
 				case client.Send <- message:
 				default:
 					close(client.Send)
-					delete(m.Clients, client.ID)
+					//delete(m.Clients, client.ID)
 				}
 			}
 			m.mu.Unlock()

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/golang-jwt/jwt"
 	"go-chatbot/internal/db/models"
-	"log"
 	"os"
 	"strconv"
 	"time"
@@ -26,7 +25,6 @@ func ValidateToken(tokenString string) (string, error) {
 		}
 		return secretKey, nil
 	})
-	log.Println(token.Valid)
 
 	// Verbose error handling
 	if err != nil {
@@ -46,7 +44,6 @@ func ValidateToken(tokenString string) (string, error) {
 
 	// Extract claims from the token (assuming you put user_id and exp in the claims)
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		log.Printf("user_id type: %T, value: %v", claims["user_id"], claims["user_id"])
 
 		userID, ok := claims["user_id"].(string)
 		if !ok {
