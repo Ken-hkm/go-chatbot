@@ -3,12 +3,11 @@ package service
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt"
+	"go-chatbot/internal/auth"
 	"go-chatbot/internal/db/models"
 	"go-chatbot/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 	"log"
-	"time"
 )
 
 type UserService interface {
@@ -62,14 +61,8 @@ func (s *userService) Login(username, password string) (string, error) {
 		return "", errors.New("invalid credentials")
 	}
 
-	// Create a JWT token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(), // Token expires in 72 hours
-	})
+	tokenString, err := auth.GenerateToken(user)
 
-	// Sign and get the complete encoded token as a string
-	tokenString, err := token.SignedString([]byte(s.jwtSecret))
 	if err != nil {
 		return "", err
 	}

@@ -3,7 +3,9 @@ package handler
 import (
 	gws "github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"go-chatbot/internal/auth"
 	"go-chatbot/internal/websocket"
+	"log"
 	"net/http"
 )
 
@@ -22,6 +24,28 @@ func NewChatHandler(manager *websocket.Manager) *ChatHandler {
 }
 
 func (h *ChatHandler) HandleWebSocket(c echo.Context) error {
+	// Extract the token from the Authorization header (Bearer token)
+	token := c.Request().Header.Get("Authorization")
+	if token == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Missing token")
+	}
+	// Extract userID from the URL or request parameter
+	userIDFromURL := c.Param("userID") // Assuming the URL has a userID parameter like /ws/chat/:userID
+	if userIDFromURL == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Missing userID in request path")
+	}
+	// Validate the JWT token and extract userID from the claims
+	userIDFromToken, err := auth.ValidateToken(token)
+	if err != nil {
+		log.Println("Error validating token:", err)
+		return echo.NewHTTPError(http.StatusUnauthorized, err.Error()) // Provide the specific error from ValidateToken
+	}
+
+	// Check if the userID from the token matches the userID in the URL path
+	if userIDFromURL != userIDFromToken {
+		return echo.NewHTTPError(http.StatusUnauthorized, "UserID mismatch")
+	}
+
 	conn, err := upgrader.Upgrade(c.Response(), c.Request(), nil) // Uses the gws (Gorilla WebSocket) upgrader
 	if err != nil {
 		return err
