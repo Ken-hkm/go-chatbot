@@ -1,3 +1,3 @@
 a backend service that handles user and startup a chatting session with bots 
 
-using langchain and Gemini API as the LLM
+using langchain and Gemini API as the LLM (still in WIP)
