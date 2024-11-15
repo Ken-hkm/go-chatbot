@@ -7,6 +7,7 @@ import (
 	"go-chatbot/internal/db/models"
 	"go-chatbot/internal/repository"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"time"
 )
 
@@ -52,7 +53,12 @@ func hashPassword(password string) (string, error) {
 func (s *userService) Login(username, password string) (string, error) {
 	// Check if user exists and password matches
 	user, err := s.userRepo.GetUserByUsername(username)
-	if err != nil || user == nil || user.Password != password {
+	hashedPass, err := hashPassword(password)
+
+	log.Println(user.Password + " : " + hashedPass)
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
 		return "", errors.New("invalid credentials")
 	}
 
