@@ -11,6 +11,7 @@ import (
 	"go-chatbot/internal/handler"
 	"go-chatbot/internal/repository"
 	"go-chatbot/internal/service"
+	"go-chatbot/internal/websocket"
 	"log"
 	"net/http"
 	"os"
@@ -44,6 +45,11 @@ func main() {
 	// Set up handlers
 	userHandler := handler.NewUserHandler(userController)
 
+	// Initialize WebSocket manager
+	manager := websocket.NewManager()
+	go manager.Start() // Run the WebSocket manager in a separate goroutine
+	// Initialize ChatHandler with the WebSocket manager
+	chatHandler := handler.NewChatHandler(manager)
 	//init echo
 	e := echo.New()
 
@@ -56,7 +62,7 @@ func main() {
 	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Register routes
-	api.RegisterRoutes(e, userHandler)
+	api.RegisterRoutes(e, userHandler, chatHandler)
 	e.GET("/healthcheck", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, Echo!")
 	})
