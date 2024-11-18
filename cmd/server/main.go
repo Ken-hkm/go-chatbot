@@ -45,11 +45,6 @@ func main() {
 	// Set up handlers
 	userHandler := handler.NewUserHandler(userController)
 
-	// Initialize WebSocket manager
-	manager := websocket.NewManager()
-	go manager.Start() // Run the WebSocket manager in a separate goroutine
-	// Initialize ChatHandler with the WebSocket manager
-	chatHandler := handler.NewChatHandler(manager)
 	//init echo
 	e := echo.New()
 
@@ -60,6 +55,11 @@ func main() {
 
 	// Set up request validation
 	e.Validator = &CustomValidator{validator: validator.New()}
+	// Create WebSocket manager
+	manager := websocket.NewManager()
+
+	// Create ChatHandler
+	chatHandler := handler.NewChatHandler(manager)
 
 	// Register routes
 	api.RegisterRoutes(e, userHandler, chatHandler)

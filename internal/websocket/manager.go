@@ -1,58 +1,55 @@
 package websocket
 
 import (
-	"github.com/gorilla/websocket"
+	"log"
 	"sync"
+
+	"github.com/gorilla/websocket"
 )
 
-type Client struct {
-	ID   string
-	Conn *websocket.Conn
-	Send chan []byte
-}
-
+// Manager manages WebSocket connections for multiple users.
 type Manager struct {
-	Clients    map[string]*Client
-	Broadcast  chan []byte
-	Register   chan *Client
-	Unregister chan *Client
-	mu         sync.Mutex
+	clients map[string]*websocket.Conn // Map userID -> WebSocket connection
+	lock    sync.Mutex                 // Synchronize access to the clients map
 }
 
+// NewManager creates a new WebSocket Manager.
 func NewManager() *Manager {
 	return &Manager{
-		Clients:    make(map[string]*Client),
-		Broadcast:  make(chan []byte),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
+		clients: make(map[string]*websocket.Conn),
 	}
 }
 
-func (m *Manager) Start() {
-	for {
-		select {
-		case client := <-m.Register:
-			m.mu.Lock()
-			m.Clients[client.ID] = client
-			m.mu.Unlock()
-		case client := <-m.Unregister:
-			m.mu.Lock()
-			if _, ok := m.Clients[client.ID]; ok {
-				close(client.Send)
-				delete(m.Clients, client.ID)
-			}
-			m.mu.Unlock()
-		case message := <-m.Broadcast:
-			m.mu.Lock()
-			for _, client := range m.Clients {
-				select {
-				case client.Send <- message:
-				default:
-					close(client.Send)
-					//delete(m.Clients, client.ID)
-				}
-			}
-			m.mu.Unlock()
-		}
+// AddClient adds a new WebSocket connection for a user.
+func (m *Manager) AddClient(userID string, conn *websocket.Conn) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	m.clients[userID] = conn
+	log.Printf("User %s connected", userID)
+}
+
+// RemoveClient removes a user's WebSocket connection.
+func (m *Manager) RemoveClient(userID string) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	if conn, exists := m.clients[userID]; exists {
+		conn.Close() // Close the connection
+		delete(m.clients, userID)
+		log.Printf("User %s disconnected", userID)
 	}
+}
+
+// SendMessage sends a message to a specific user's WebSocket connection.
+func (m *Manager) SendMessage(userID, message string) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	conn, exists := m.clients[userID]
+	if !exists {
+		return nil // No active connection for the user
+	}
+
+	return conn.WriteMessage(websocket.TextMessage, []byte(message))
 }
