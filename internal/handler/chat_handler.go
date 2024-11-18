@@ -7,6 +7,7 @@ import (
 	"go-chatbot/internal/websocket"
 	"log"
 	"net/http"
+	"os"
 )
 
 // WebSocket upgrader settings
@@ -28,24 +29,27 @@ func NewChatHandler(manager *websocket.Manager) *ChatHandler {
 // HandleWebSocket handles the WebSocket connections and processes messages
 func (h *ChatHandler) HandleWebSocket(c echo.Context) error {
 	// Extract the token and validate as described in your existing code.
-	token := c.Request().Header.Get("Authorization")
-	if token == "" {
-		return echo.NewHTTPError(http.StatusUnauthorized, "Missing token")
-	}
+	userIDFromToken := "0"
+	if os.Getenv("VALIDATE_TOKEN") == "true" {
+		token := c.Request().Header.Get("Authorization")
+		if token == "" {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Missing token")
+		}
 
-	userIDFromURL := c.Param("userID")
-	if userIDFromURL == "" {
-		return echo.NewHTTPError(http.StatusBadRequest, "Missing userID in request path")
-	}
+		userIDFromURL := c.Param("userID")
+		if userIDFromURL == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "Missing userID in request path")
+		}
 
-	userIDFromToken, err := auth.ValidateToken(token)
-	if err != nil {
-		log.Println("Error validating token:", err)
-		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
-	}
+		userIDFromToken, err := auth.ValidateToken(token)
+		if err != nil {
+			log.Println("Error validating token:", err)
+			return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
+		}
 
-	if userIDFromURL != userIDFromToken {
-		return echo.NewHTTPError(http.StatusUnauthorized, "UserID mismatch")
+		if userIDFromURL != userIDFromToken {
+			return echo.NewHTTPError(http.StatusUnauthorized, "UserID mismatch")
+		}
 	}
 
 	// Upgrade to WebSocket
@@ -67,10 +71,7 @@ func (h *ChatHandler) HandleWebSocket(c echo.Context) error {
 			log.Printf("Error reading from WebSocket for user %s: %v", userIDFromToken, err)
 			break
 		}
-
 		log.Printf("Received message from user %s: %s", userIDFromToken, msg)
-
-		// Process message and reply (e.g., via LangChain or another service)
 		aiResponse, err := h.getLLMResponse(c, string(msg))
 		if err := conn.WriteMessage(gws.TextMessage, []byte(aiResponse)); err != nil {
 			log.Printf("Error writing to WebSocket for user %s: %v", userIDFromToken, err)
