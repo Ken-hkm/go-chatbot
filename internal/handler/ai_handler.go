@@ -24,3 +24,23 @@ func (h *ChatHandler) getLLMResponse(c echo.Context, userMessage string) (string
 
 	return aiResponse, nil
 }
+
+//
+//func (h *ChatHandler) getAgentResponse(c echo.Context, userMessage string) (string, error) {
+//	log.Println("Getting Agent response...")
+//	ctx := c.Request().Context()
+//	apiKey := os.Getenv("LLM_API_KEY")
+//	llm, err := googleai.New(ctx, googleai.WithAPIKey(apiKey))
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	agentTools := []tools.Tool{tools.Calculator{}
+//	}
+//	agent := agents.NewConversationalAgent()
+//	aiResponse, err := llms.GenerateFromSinglePrompt(ctx, llm, userMessage)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	return aiResponse, nil
+//}
