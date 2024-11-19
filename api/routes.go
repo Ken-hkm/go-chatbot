@@ -13,4 +13,7 @@ func RegisterRoutes(e *echo.Echo, userHandler *handler.UserHandler, chatHandler 
 
 	apiGroupChat := e.Group("/api/v1/chat")
 	apiGroupChat.GET("/ws/chat/:userID", chatHandler.HandleWebSocket)
+
+	apiGroupVector := e.Group("/api/v1/vector-db")
+	apiGroupVector.POST("/populate-data", userHandler.Login)
 }
