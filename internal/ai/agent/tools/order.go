@@ -1,12 +1,9 @@
 package tools
 
 import (
-	"context"
 	_ "github.com/tmc/langchaingo/chains"
 	_ "github.com/tmc/langchaingo/llms"
 	_ "github.com/tmc/langchaingo/tools"
-	"go-chatbot/internal/repository"
-	"go-chatbot/internal/service"
 	"gorm.io/gorm"
 )
 
@@ -28,13 +25,14 @@ func (o *OrderTool) Description() string {
 	return "Gets and fetch all Order Information by user Id"
 }
 
-func (o *OrderTool) Run(ctx context.Context, query string) (string, error) {
-	orderRepo := repository.NewOrderRepository(o.db)
-	orderService := service.NewOrderService(orderRepo)
-	orderData, err := orderService.GetUserByID(1)
-	if err != nil {
-		return "", err
-	}
-
-	return orderData[0].SalesNo, nil
-}
+//
+//func (o *OrderTool) Run(ctx context.Context, query string) (string, error) {
+//	//orderRepo := repository.NewOrderRepository(o.db)
+//	//orderService := service.NewOrderService(orderRepo)
+//	//orderData, err := orderService.GetUserByID(1)
+//	//if err != nil {
+//	//	return "", err
+//	//}
+//	//
+//	//return orderData[0].SalesNo, nil
+//}

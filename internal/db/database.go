@@ -32,7 +32,8 @@ func InitDB() {
 	DB = db
 
 	// Auto-migrate models
-	err_migration := db.AutoMigrate(&models.User{}, &models.ChatMessage{}, &models.Order{}, &models.Product{}, &models.Promo{}, &models.Payment{})
+	err_migration := db.AutoMigrate(&models.User{}, &models.ChatMessage{})
+	//err_migration := db.AutoMigrate(&models.User{}, &models.ChatMessage{}, &models.Order{}, &models.Product{}, &models.Promo{}, &models.Payment{})
 	if err_migration != nil {
 		log.Fatalf("Could not migrate database: %v", err_migration)
 	}
